@@ -7,7 +7,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 @Table
 @Data
-public class BlogPost {
+public class Post {
 
     @Id
     private Long Id;
