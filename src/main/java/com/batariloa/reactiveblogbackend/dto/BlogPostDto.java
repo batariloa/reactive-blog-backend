@@ -3,12 +3,13 @@ package com.batariloa.reactiveblogbackend.dto;
 
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Data
 @Builder
-public class BlogDto {
+public class BlogPostDto {
 
-    private Long id;
+    private Integer id;
     private String text;
     private String title;
 
