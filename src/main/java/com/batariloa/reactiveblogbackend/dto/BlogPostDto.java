@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class BlogDto {
+public class BlogPostDto {
 
     private Long id;
     private String text;
