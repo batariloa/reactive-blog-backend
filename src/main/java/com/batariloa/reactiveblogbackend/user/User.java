@@ -2,6 +2,7 @@ package com.batariloa.reactiveblogbackend.user;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,23 +18,40 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @With
-@Table("blogster_user")
+@Table(value="public.blogster_user")
 public class User implements UserDetails {
 
 
     private Role role;
     @Id
+    @Column("id")
     private Integer id;
+    @Column
     private String firstname;
+    @Column
     private String lastname;
+    @Column
     private String username;
+    @Column
     private String email;
+    @Column
     private String password;
 
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
     }
 
     @Override

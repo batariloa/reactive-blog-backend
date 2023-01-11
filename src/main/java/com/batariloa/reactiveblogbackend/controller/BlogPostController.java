@@ -39,13 +39,6 @@ public class BlogPostController {
     public Mono<BlogPost> test(){
 
         BlogPost blogPost = BlogPost.builder().title("leeeeeeeeee").text("leeeee").build();
-        System.out.println("NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOooo");
-
-
-
-
-
-
 
         return blogRepository.save(blogPost);
     }
