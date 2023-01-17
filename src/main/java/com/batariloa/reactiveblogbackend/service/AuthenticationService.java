@@ -1,23 +1,24 @@
 package com.batariloa.reactiveblogbackend.service;
 
-import com.batariloa.reactiveblogbackend.dto.MessageResponse;
+import com.batariloa.reactiveblogbackend.controller.AuthController;
+import com.batariloa.reactiveblogbackend.dto.AuthRequest;
+import com.batariloa.reactiveblogbackend.dto.AuthResponse;
 import com.batariloa.reactiveblogbackend.dto.RegisterRequest;
 import com.batariloa.reactiveblogbackend.repository.UserRepository;
 import com.batariloa.reactiveblogbackend.user.Role;
 import com.batariloa.reactiveblogbackend.user.User;
+import com.batariloa.reactiveblogbackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import javax.security.sasl.AuthenticationException;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +27,8 @@ public class AuthenticationService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final JwtUtil jwtUtil;
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     public Mono signUp(Mono<RegisterRequest> request){
 
 
@@ -44,7 +46,6 @@ public class AuthenticationService {
     }
 
     public User registerToUser(RegisterRequest rq){
-        System.out.println("Daaam bruv");
         User user=       User.builder()
                 .email(rq.getEmail())
                 .firstname(rq.getFirstname())
@@ -56,5 +57,17 @@ public class AuthenticationService {
 
         System.out.println("Checking here");
         return user;
+    }
+
+
+    public Mono<ResponseEntity<AuthResponse>> login(AuthRequest ar){
+
+        return userRepository.findByEmail(ar.getEmail())
+                .filter(user ->
+                        passwordEncoder.matches(ar.getPassword(), user.getPassword()) )
+                .map(user -> ResponseEntity.ok(new AuthResponse(jwtUtil.generateToken(user))))
+                .switchIfEmpty(Mono.defer(() -> Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build())));
+
+
     }
 }

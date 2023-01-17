@@ -5,6 +5,8 @@ import com.batariloa.reactiveblogbackend.user.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +25,10 @@ public class JwtUtil {
 
     private Key key;
 
+    @PostConstruct
+    public void init() {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+    }
     public Claims getAllClaimsFromToken(String token){
 
         JwtParser parser = Jwts.parserBuilder().setSigningKey(key).build();
