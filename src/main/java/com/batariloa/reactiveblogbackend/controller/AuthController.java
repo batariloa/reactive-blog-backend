@@ -18,17 +18,11 @@ import reactor.core.publisher.Mono;
 @RequestMapping("auth")
 public class AuthController {
 
-
-
-
     @Autowired
     private AuthenticationService authenticationService;
 
-
-
     @PostMapping("login")
     public Mono<ResponseEntity<AuthResponse>> login(@RequestBody AuthRequest ar){
-
 
         return authenticationService.login(ar);
     }
@@ -37,6 +31,5 @@ public class AuthController {
     public Mono register(@RequestBody Mono<RegisterRequest> registerRequestMono){
 
         return authenticationService.signUp(registerRequestMono);
-
     }
 }

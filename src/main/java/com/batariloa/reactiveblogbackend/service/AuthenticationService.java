@@ -18,8 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
-import javax.security.sasl.AuthenticationException;
-
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -29,44 +27,37 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-    public Mono signUp(Mono<RegisterRequest> request){
+
+    public Mono signUp(Mono<RegisterRequest> request) {
 
 
-
-     return request
-             .map(this::registerToUser)
-             .flatMap(user -> userRepository.findByEmail(user.getEmail())
-                     .flatMap(user1 -> Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST,"error")))
-                     .switchIfEmpty(userRepository.save(user))
-
-             );
-
-
-
+        return request.map(this::registerToUser)
+                      .flatMap(user -> userRepository.findByEmail(user.getEmail())
+                                                     .flatMap(user1 -> Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "error")))
+                                                     .switchIfEmpty(userRepository.save(user)));
     }
 
-    public User registerToUser(RegisterRequest rq){
-        User user=       User.builder()
-                .email(rq.getEmail())
-                .firstname(rq.getFirstname())
-                .lastname(rq.getLastname())
-                .username(rq.getUsername())
-                .password(passwordEncoder.encode(rq.getPassword()))
-                .role(Role.USER)
-                .build();
+    public User registerToUser(RegisterRequest rq) {
+        User user = User.builder()
+                        .email(rq.getEmail())
+                        .firstname(rq.getFirstname())
+                        .lastname(rq.getLastname())
+                        .username(rq.getUsername())
+                        .password(passwordEncoder.encode(rq.getPassword()))
+                        .role(Role.USER)
+                        .build();
 
-        System.out.println("Checking here");
         return user;
     }
 
 
-    public Mono<ResponseEntity<AuthResponse>> login(AuthRequest ar){
+    public Mono<ResponseEntity<AuthResponse>> login(AuthRequest ar) {
 
         return userRepository.findByEmail(ar.getEmail())
-                .filter(user ->
-                        passwordEncoder.matches(ar.getPassword(), user.getPassword()) )
-                .map(user -> ResponseEntity.ok(new AuthResponse(jwtUtil.generateToken(user))))
-                .switchIfEmpty(Mono.defer(() -> Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build())));
+                             .filter(user -> passwordEncoder.matches(ar.getPassword(), user.getPassword()))
+
+                             .map(user -> ResponseEntity.ok(new AuthResponse(jwtUtil.generateToken(user))))
+                             .switchIfEmpty(Mono.defer(() -> Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication error"))));
 
 
     }
