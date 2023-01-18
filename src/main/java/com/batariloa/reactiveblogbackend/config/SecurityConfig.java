@@ -1,7 +1,7 @@
 package com.batariloa.reactiveblogbackend.config;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,10 +24,10 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private SecurityContextRepository securityContextRepository;
+
+    private final AuthenticationManager authenticationManager;
+
+    private final SecurityContextRepository securityContextRepository;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -39,7 +39,9 @@ public class SecurityConfig {
         return new WebFluxConfigurerComposite() {
 
             @Override
-            public void addCorsMappings(CorsRegistry registry) {
+
+            public void addCorsMappings(@NonNull CorsRegistry registry) {
+
                 registry.addMapping("/**")
                         .allowedOrigins("*")
                         .allowedMethods("*");

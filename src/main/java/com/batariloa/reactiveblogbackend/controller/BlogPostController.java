@@ -6,23 +6,22 @@ import com.batariloa.reactiveblogbackend.dto.CreateBlogRequest;
 import com.batariloa.reactiveblogbackend.model.BlogPost;
 import com.batariloa.reactiveblogbackend.repository.BlogRepository;
 import com.batariloa.reactiveblogbackend.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/post")
-
 public class BlogPostController {
 
 
-    @Autowired
-    private BlogRepository blogRepository;
-    @Autowired
-    private UserRepository userRepository;
+    private final BlogRepository blogRepository;
+
+    private final UserRepository userRepository;
 
     @GetMapping
     public Flux<BlogPostDto> getAllPostsForAuthenticatedUser(Authentication authentication) {
@@ -67,21 +66,8 @@ public class BlogPostController {
                                                                                  .authorId(post.getAuthorId())
                                                                                  .repost(true)
                                                                                  .build()))
-                             .flatMap(p -> blogRepository.save(p));
+                             .flatMap(blogRepository::save);
     }
 
-
-    public BlogPostDto blogPostToDto(BlogPost post) {
-        return BlogPostDto.builder()
-                          .id(post.getId())
-                          .ownerId(post.getOwnerId())
-                          .authorId(post.getOwnerId())
-                          .title(post.getTitle())
-                          .text(post.getText())
-                          .repost(post.isRepost())
-                          .authorUsername("")
-                          .build();
-    }
-
-
+    
 }
