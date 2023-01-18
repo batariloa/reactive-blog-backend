@@ -4,6 +4,7 @@ import com.batariloa.reactiveblogbackend.controller.AuthController;
 import com.batariloa.reactiveblogbackend.dto.AuthRequest;
 import com.batariloa.reactiveblogbackend.dto.AuthResponse;
 import com.batariloa.reactiveblogbackend.dto.RegisterRequest;
+import com.batariloa.reactiveblogbackend.dto.SearchUserDto;
 import com.batariloa.reactiveblogbackend.repository.UserRepository;
 import com.batariloa.reactiveblogbackend.user.Role;
 import com.batariloa.reactiveblogbackend.user.User;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -60,5 +62,10 @@ public class AuthenticationService {
                              .switchIfEmpty(Mono.defer(() -> Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication error"))));
 
 
+    }
+
+    public Flux<SearchUserDto> searchUser(String query) {
+
+        return userRepository.searchUsersByUsername(query);
     }
 }

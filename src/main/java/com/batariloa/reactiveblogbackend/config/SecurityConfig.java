@@ -70,7 +70,7 @@ public class SecurityConfig {
                    .authorizeExchange()
                    .pathMatchers(HttpMethod.OPTIONS)
                    .permitAll()
-                   .pathMatchers("/auth/login", "/auth/register")
+                   .pathMatchers("/auth/login", "/auth/register", "/auth/search/**")
                    .permitAll()
                    .anyExchange()
                    .authenticated()
