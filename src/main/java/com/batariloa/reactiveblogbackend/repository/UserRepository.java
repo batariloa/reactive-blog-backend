@@ -11,7 +11,7 @@ public interface UserRepository extends ReactiveCrudRepository<User, Integer> {
 
     Mono<User> findByEmail(String email);
 
-    @Query("select * from public.blogster_user WHERE username LIKE '%'||:username||'%'")
+    @Query("select * from public.blogster_user WHERE username LIKE '%'||:username||'%' LIMIT 6")
     Flux<SearchUserDto> searchUsersByUsername(String username);
 
 
