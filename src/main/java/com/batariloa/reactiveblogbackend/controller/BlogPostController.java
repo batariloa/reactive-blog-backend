@@ -24,21 +24,24 @@ public class BlogPostController {
     @Autowired
     private UserRepository userRepository;
 
-    @GetMapping("/{username}")
-    public Flux<BlogPostDto> getUsersPosts(@PathVariable("username") String username) {
+    @GetMapping
+    public Flux<BlogPostDto> getAllPostsForAuthenticatedUser(Authentication authentication) {
 
-        return blogRepository.findAllByOwnerUsername(username)
-                             .map(e -> BlogPostDto.builder()
-                                                  .id(e.getId())
-                                                  .title(e.getTitle())
-                                                  .text(e.getText())
-                                                  .build());
+        return blogRepository.findAllByOwnerEmailWithAuthorUsername(authentication.getPrincipal()
+                                                                                  .toString());
 
     }
 
+    @GetMapping("/{username}")
+    public Flux<BlogPostDto> getUsersPosts(@PathVariable("username") String username) {
+
+        return blogRepository.findAllByOwnerUsernameWithAuthorUsername(username);
+
+    }
+
+
     @PostMapping
     public Mono<BlogPost> createPost(@RequestBody CreateBlogRequest createBlogRequest, Authentication authentication) {
-
 
         return userRepository.findByEmail(authentication.getPrincipal()
                                                         .toString())
@@ -47,10 +50,37 @@ public class BlogPostController {
                                                                        .text(createBlogRequest.getText())
                                                                        .authorId(s.getId())
                                                                        .ownerId(s.getId())
-                                                                       .build()))
+                                                                       .repost(false)
+                                                                       .build()));
+    }
 
-                ;
+    @PostMapping("/repost/{id}")
+    public Mono<BlogPost> repostPost(@PathVariable Integer id, Authentication authentication) {
 
+        return userRepository.findByEmail(authentication.getPrincipal()
+                                                        .toString())
+                             .flatMap(user -> blogRepository.findById(id)
+                                                            .map(post -> BlogPost.builder()
+                                                                                 .title(post.getTitle())
+                                                                                 .text(post.getText())
+                                                                                 .ownerId(user.getId())
+                                                                                 .authorId(post.getAuthorId())
+                                                                                 .repost(true)
+                                                                                 .build()))
+                             .flatMap(p -> blogRepository.save(p));
+    }
+
+
+    public BlogPostDto blogPostToDto(BlogPost post) {
+        return BlogPostDto.builder()
+                          .id(post.getId())
+                          .ownerId(post.getOwnerId())
+                          .authorId(post.getOwnerId())
+                          .title(post.getTitle())
+                          .text(post.getText())
+                          .repost(post.isRepost())
+                          .authorUsername("")
+                          .build();
     }
 
 

@@ -31,6 +31,6 @@ public class BlogPost {
     @Column
     private Integer ownerId;
 
-
-
+    @Column
+    private boolean repost;
 }

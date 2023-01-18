@@ -56,7 +56,7 @@ public class AuthenticationService {
         return userRepository.findByEmail(ar.getEmail())
                              .filter(user -> passwordEncoder.matches(ar.getPassword(), user.getPassword()))
 
-                             .map(user -> ResponseEntity.ok(new AuthResponse(jwtUtil.generateToken(user))))
+                             .map(user -> ResponseEntity.ok(new AuthResponse(jwtUtil.generateToken(user), user.getUsername(), user.getId(), user.getRole())))
                              .switchIfEmpty(Mono.defer(() -> Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication error"))));
 
 
