@@ -25,7 +25,6 @@ public class AuthenticationService {
 
     public Mono<MessageResponse> signUp(Mono<RegisterRequest> request) {
 
-
         return request.map(this::registerToUser)
                       .flatMap(user -> userRepository.existsByEmail(user.getEmail())
                                                      .flatMap(u -> {
