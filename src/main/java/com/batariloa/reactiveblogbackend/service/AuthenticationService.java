@@ -1,16 +1,21 @@
 package com.batariloa.reactiveblogbackend.service;
 
+import com.batariloa.reactiveblogbackend.controller.BlogPostController;
 import com.batariloa.reactiveblogbackend.dto.*;
 import com.batariloa.reactiveblogbackend.repository.UserRepository;
 import com.batariloa.reactiveblogbackend.user.Role;
 import com.batariloa.reactiveblogbackend.user.User;
 import com.batariloa.reactiveblogbackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -22,6 +27,8 @@ public class AuthenticationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+
+    private static final Logger logger = LoggerFactory.getLogger(BlogPostController.class);
 
     public Mono<MessageResponse> signUp(Mono<RegisterRequest> request) {
 
@@ -54,11 +61,21 @@ public class AuthenticationService {
     }
 
 
-    public Mono<ResponseEntity<AuthResponse>> login(AuthRequest ar) {
+    public Mono<ResponseEntity<AuthResponse>> login(AuthRequest ar, ServerWebExchange exchange) {
 
         return userRepository.findByEmail(ar.getEmail())
                              .filter(user -> passwordEncoder.matches(ar.getPassword(), user.getPassword()))
+                             .map(user -> {
+                                 exchange.getResponse()
+                                         .addCookie(ResponseCookie.from("token", jwtUtil.generateToken(user))
+                                                                  .httpOnly(true)
+                                                                  .path("/")
+                                                                  .maxAge(232132)
+                                                                  .secure(false)
+                                                                  .build());
+                                 return user;
 
+                             })
                              .map(user -> ResponseEntity.ok(new AuthResponse(jwtUtil.generateToken(user), user.getUsername(), user.getId(), user.getRole())))
                              .switchIfEmpty(Mono.defer(() -> Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication error"))));
 

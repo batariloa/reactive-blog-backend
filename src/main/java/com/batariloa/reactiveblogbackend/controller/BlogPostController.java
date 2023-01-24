@@ -7,6 +7,8 @@ import com.batariloa.reactiveblogbackend.model.BlogPost;
 import com.batariloa.reactiveblogbackend.repository.BlogRepository;
 import com.batariloa.reactiveblogbackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -16,6 +18,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/post")
+@CrossOrigin(origins = "http://localhost:3000")
 public class BlogPostController {
 
 
@@ -23,8 +26,14 @@ public class BlogPostController {
 
     private final UserRepository userRepository;
 
+    private static final Logger logger = LoggerFactory.getLogger(BlogPostController.class);
+
     @GetMapping
     public Flux<BlogPostDto> getAllPostsForAuthenticatedUser(Authentication authentication) {
+
+
+        logger.warn("COntROLLER" + authentication.getPrincipal()
+                                                 .toString());
 
         return blogRepository.findAllByOwnerEmailWithAuthorUsername(authentication.getPrincipal()
                                                                                   .toString());
@@ -69,5 +78,5 @@ public class BlogPostController {
                              .flatMap(blogRepository::save);
     }
 
-    
+
 }

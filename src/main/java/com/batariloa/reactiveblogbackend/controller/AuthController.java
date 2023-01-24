@@ -7,21 +7,23 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("auth")
+@CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
 
 
     private final AuthenticationService authenticationService;
 
     @PostMapping("login")
-    public Mono<ResponseEntity<AuthResponse>> login(@RequestBody AuthRequest ar) {
+    public Mono<ResponseEntity<AuthResponse>> login(@RequestBody AuthRequest ar, ServerWebExchange exchange) {
 
-        return authenticationService.login(ar);
+        return authenticationService.login(ar, exchange);
     }
 
     @PostMapping(path = "register", consumes = MediaType.APPLICATION_JSON_VALUE)
