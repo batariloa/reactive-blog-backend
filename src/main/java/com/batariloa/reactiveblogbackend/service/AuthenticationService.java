@@ -68,7 +68,6 @@ public class AuthenticationService {
         logger.warn("LOGIN CALLED");
         return userRepository.findByEmail(ar.getEmail())
                              .filter(user -> passwordEncoder.matches(ar.getPassword(), user.getPassword()))
-
                              .map(user -> {
 
                                  String refreshToken = jwtUtil.generateRefreshToken(user);
@@ -90,19 +89,9 @@ public class AuthenticationService {
 
                                                                   .secure(false)
                                                                   .build());
-
-
                                  return user;
-
                              })
-                             .doOnNext(user -> {
-                                         userRepository.save(user)
-                                                       .subscribe();
-
-                                     }
-
-
-                             )
+                             .flatMap(userRepository::save)
                              .map(user -> ResponseEntity.ok(new AuthResponse(jwtUtil.generateToken(user), user.getUsername(), user.getId(), user.getRole())))
                              .switchIfEmpty(Mono.defer(() -> Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication error"))));
 
@@ -126,9 +115,7 @@ public class AuthenticationService {
 
         return userRepository.findByRefreshToken(refreshToken)
                              .map(jwtUtil::generateToken)
-
                              .map(token -> {
-
                                  exchange.getResponse()
                                          .addCookie(ResponseCookie.from("token", token)
                                                                   .httpOnly(true)
