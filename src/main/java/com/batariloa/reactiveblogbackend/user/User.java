@@ -34,7 +34,8 @@ public class User implements UserDetails {
     private String email;
     @Column
     private String password;
-
+    @Column
+    private String refreshToken;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -7,10 +7,12 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -30,35 +32,25 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
 
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
+        String accessToken = authentication.getCredentials()
+                                           .toString();
 
+        if (accessToken.isEmpty() || accessToken == null) {
+            return Mono.just(new AnonymousAuthenticationToken("anonymous", "anonymous", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")));
 
-        String authToken = authentication.getCredentials()
-                                         .toString();
+        }
+        if (!jwtUtil.validateToken(accessToken)) {
+            return Mono.just(new AnonymousAuthenticationToken("anonymous", "anonymous", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")));
+        } else {
+            String username = jwtUtil.getUsernameFromToken(accessToken);
+            Claims claims = jwtUtil.getAllClaimsFromToken(accessToken);
+            final Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get("role")
+                                                                                           .toString()
+                                                                                           .split(","))
+                                                                             .map(SimpleGrantedAuthority::new)
+                                                                             .toList();
 
-        logger.warn("AUTH TOKEN IN MANAGER: " + authToken);
-        String username = jwtUtil.getUsernameFromToken(authToken);
-
-        return Mono.just(jwtUtil.validateToken(authToken))
-                   .filter(valid -> valid)
-                   .switchIfEmpty(Mono.empty())
-                   .map(valid -> {
-
-                       logger.warn("VALID" + valid);
-                       Claims claims = jwtUtil.getAllClaimsFromToken(authToken);
-                       final Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get("role")
-                                                                                                      .toString()
-                                                                                                      .split(","))
-                                                                                        .map(SimpleGrantedAuthority::new)
-                                                                                        .toList();
-
-                       logger.warn("roles map" + claims.get("role")
-                                                       .toString());
-
-                       logger.warn("ISVALID: " + jwtUtil.validateToken(authToken));
-                       logger.warn("USERNAME" + username);
-
-                       return new UsernamePasswordAuthenticationToken(username, null, null);
-                   });
-
+            return Mono.just(new UsernamePasswordAuthenticationToken(username, null, authorities));
+        }
     }
 }

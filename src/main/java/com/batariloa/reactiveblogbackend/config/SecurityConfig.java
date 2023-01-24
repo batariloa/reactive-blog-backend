@@ -19,6 +19,7 @@ import org.springframework.security.web.server.authentication.logout.ServerLogou
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.session.WebSessionManager;
 import reactor.core.publisher.Mono;
 
@@ -67,30 +68,25 @@ public class SecurityConfig {
         return http
 
                 .exceptionHandling()
-                .authenticationEntryPoint((exchange, exception) -> Mono.error(exception))
+                .authenticationEntryPoint((exchange, exception) -> Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication error" + exception.toString())))
                 .accessDeniedHandler((exchange, exception) -> Mono.error(exception))
-
                 .and()
-                //STATELESS
                 .csrf()
                 .disable()
-
                 .formLogin()
                 .disable()
                 .addFilterAt(webFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .httpBasic()
                 .disable()
-
                 .authenticationManager(authenticationManager)
                 .cors()
                 .configurationSource(corsConfigurationSource())
                 .and()
                 .authorizeExchange()
-                .pathMatchers("/auth/login", "/auth/register", "/auth/search/**")
+                .pathMatchers("/auth/login", "/auth/register", "/auth/search/**", "/auth/refresh-token", "/auth/**")
                 .permitAll()
                 .pathMatchers("/post", "/post/**", "/post/*")
                 .authenticated()
-
                 .and()
                 .logout()
                 .logoutSuccessHandler(new ServerLogoutSuccessHandler() {

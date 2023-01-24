@@ -4,6 +4,7 @@ package com.batariloa.reactiveblogbackend.util;
 import com.batariloa.reactiveblogbackend.controller.BlogPostController;
 import com.batariloa.reactiveblogbackend.user.User;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -55,6 +56,7 @@ public class JwtUtil {
     private Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
 
+
         return expiration.before(new Date());
     }
 
@@ -75,7 +77,7 @@ public class JwtUtil {
         Long expirationTimeLong = Long.parseLong(expirationTime);
 
         final Date createdDate = new Date();
-        final Date expirationDate = new Date(createdDate.getTime() + expirationTimeLong * 1000);
+        final Date expirationDate = new Date(createdDate.getTime() + expirationTimeLong * 5);
 
 
         return Jwts.builder()
@@ -87,9 +89,42 @@ public class JwtUtil {
                    .compact();
     }
 
+    public String generateRefreshToken(User user) {
+
+        Map<String, Object> claims = new HashMap<>();
+
+        logger.warn("SET ROLES OF" + user.getRole()
+                                         .getValue());
+        claims.put("role", user.getRole()
+                               .getValue());
+
+        return doGenerateRefreshToken(claims, user.getUsername());
+    }
+
+    public String doGenerateRefreshToken(Map<String, Object> claims, String username) {
+
+        Long expirationTimeLong = Long.parseLong(expirationTime);
+
+        final Date createdDate = new Date();
+        final Date expirationDate = new Date(createdDate.getTime() + expirationTimeLong * 90000);
+        return Jwts.builder()
+                   .setClaims(claims)
+                   .setSubject(username)
+                   .setIssuedAt(createdDate)
+                   .setExpiration(expirationDate)
+                   .signWith(key)
+                   .compact();
+    }
+
+
     public Boolean validateToken(String token) {
 
-        return !isTokenExpired(token);
+
+        try {
+            return !isTokenExpired(token);
+        } catch (ExpiredJwtException e) {
+            return false;
+        }
     }
 
 
